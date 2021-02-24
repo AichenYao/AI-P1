@@ -81,6 +81,10 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
+        # If we find a food close to us, then base up
+        # If next state is close to a wall, then base down
+        # If closer to ghost, then base down
+        # If newScaredTimes is bigger, then base up
         successorGameState = currentGameState.generatePacmanSuccessor(action)
         newPos = successorGameState.getPacmanPosition()
         curFood = currentGameState.getFood()
@@ -89,21 +93,29 @@ class ReflexAgent(Agent):
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         newGhosts = [ghostState.getPosition() for ghostState in newGhostStates]
+        #print(newGhosts)
         #shall we also get ghosts' positions?
-        # ghostIndices = [ghostState.index for ghostState in newGhostStates]
-        # max_d = 0
-        # for ghost in newGhosts:
-        #     distance = mazeDistance(newPos, ghost, successorGameState)
-        #     if (distance > max_d):
-        #         max_d = distance
+        min_d = 0
+        for ghost in newGhosts:
+            m,n = ghost
+            distance = mazeDistance(newPos, (int(m),int(n)), successorGameState)
+            if (min_d == 0 or distance < min_d):
+                min_d = distance
         base = 0
         count_curFood = curFood.count(True)
         count_newFood = newFood.count(True)
-        if (count_newFood < count_curFood):
+        if (min_d > 3):
+            if (count_newFood < count_curFood):
+                if (sum(newScaredTimes) > 0):
+                    base += (count_curFood - count_newFood) * 500
+                base += (count_curFood - count_newFood) * 300
+        else: 
+            if (count_newFood < count_curFood):
             #assume the food is a power pellet
-            base += count_curFood - count_newFood
-        base += sum(newScaredTimes)
-        # base += int(max_d)
+                if (sum(newScaredTimes) > 0):
+                    base += (count_curFood - count_newFood) * 100
+                base += (count_curFood - count_newFood) * 70
+        base += min_d 
         # "*** YOUR CODE HERE ***"
         #print(base)
         return base
