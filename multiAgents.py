@@ -102,8 +102,17 @@ class ReflexAgent(Agent):
             if (min_d == 0 or distance < min_d):
                 min_d = distance
         base = 0
-        count_curFood = curFood.count(True)
-        count_newFood = newFood.count(True)
+        rows, cols = len(newFood.data), len(newFood.data[0])
+        newFoodRow, newFoodCol = -1,-1
+        food_distance = -1
+        for row in range(rows):
+            for col in range(cols):
+                if (curFood[row][col] != newFood[row][col]):
+                    newFoodRow, newFoodCol = row,col
+                    food_distance = mazeDistance(curPos, (newFoodRow, newFoodCol), successorGameState)
+                    break
+        if (food_distance != -1):
+            base += (100 / food_distance)
         if (min_d > 3):
             if (count_newFood < count_curFood):
                 if (sum(newScaredTimes) > 0):
