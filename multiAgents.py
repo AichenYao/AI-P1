@@ -86,21 +86,19 @@ class ReflexAgent(Agent):
         # If closer to ghost, then base down
         # If newScaredTimes is bigger, then base up
         successorGameState = currentGameState.generatePacmanSuccessor(action)
+        curPos = currentGameState.getPacmanPosition()
         newPos = successorGameState.getPacmanPosition()
+        newX, newY = newPos
         curFood = currentGameState.getFood()
         newFood = successorGameState.getFood()
+        food_total = curFood.count(True)
 
         newGhostStates = successorGameState.getGhostStates()
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         newGhosts = [ghostState.getPosition() for ghostState in newGhostStates]
-        #print(newGhosts)
-        #shall we also get ghosts' positions?
-        min_d = 0
-        for ghost in newGhosts:
-            m,n = ghost
-            distance = mazeDistance(newPos, (int(m),int(n)), successorGameState)
-            if (min_d == 0 or distance < min_d):
-                min_d = distance
+        
+        walls = currentGameState.getWalls()
+
         base = 0
         rows, cols = len(newFood.data), len(newFood.data[0])
         newFoodRow, newFoodCol = -1,-1
@@ -112,19 +110,23 @@ class ReflexAgent(Agent):
                     food_distance = mazeDistance(curPos, (newFoodRow, newFoodCol), successorGameState)
                     break
         if (food_distance != -1):
-            base += (100 / food_distance)
-        if (min_d > 3):
-            if (count_newFood < count_curFood):
-                if (sum(newScaredTimes) > 0):
-                    base += (count_curFood - count_newFood) * 500
-                base += (count_curFood - count_newFood) * 300
-        else: 
-            if (count_newFood < count_curFood):
-            #assume the food is a power pellet
-                if (sum(newScaredTimes) > 0):
-                    base += (count_curFood - count_newFood) * 100
-                base += (count_curFood - count_newFood) * 70
-        base += min_d 
+            base += (8888 / (food_distance * food_total))
+        if (food_distance == -1):
+            base -= 1200
+        if (walls[newX][newY]): 
+            base -= 30
+        min_d = 0
+        for ghost in newGhosts:
+            m,n = ghost
+            distance = mazeDistance(newPos, (int(m),int(n)), successorGameState)
+            if (min_d == 0 or distance < min_d):
+                min_d = distance
+        if (min_d < 3):
+            base -= (min_d) * 4444
+        else:
+            base -= (min_d) * 80
+        
+        base += sum(newScaredTimes)
         # "*** YOUR CODE HERE ***"
         #print(base)
         return base
