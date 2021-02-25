@@ -156,41 +156,31 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
 
     def getAction(self, gameState):
-        """
-        Returns the minimax action from the current gameState using self.depth
-        and self.evaluationFunction.
-
-        Here are some method calls that might be useful when implementing minimax.
-
-        gameState.getLegalActions(agentIndex):
-        Returns a list of legal actions for an agent
-        agentIndex=0 means Pacman, ghosts are >= 1
-
-        gameState.generateSuccessor(agentIndex, action):
-        Returns the successor game state after an agent takes an action
-
-        gameState.getNumAgents():
-        Returns the total number of agents in the game
-        """
         "*** YOUR CODE HERE ***"
         num_ghosts = gameState.getNumAgents()-1
         def max_value(state, curr_depth):
+            #only Pacman will take the max, so no need to pass in agentIndex here
+            #it will always be 0
             actions = gameState.getLegalActions(0)
             # if there are no more legal actions or if we have reached the
             # designated depth, then this state is a leaf
-            if (curr_depth == self.depth or actions == []):
+            if (curr_depth == self.depth or len(actions) == 0):
+                print("actions:")
+                print((len(actions) == 0))
                 return self.evaluationFunction(state)
             best_value = -10000000
             for action in actions:
                 next_state = gameState.generateSuccessor(0, action)
-                next_value = min_value(next_state, curr_depth+1, 1)
+                next_value = min_value(next_state, curr_depth, 1)
                 if next_value > best_value:
                     best_value = next_value
             return best_value
         
         def min_value(state, curr_depth, agentIndex):
             actions = gameState.getLegalActions(agentIndex)
-            if (curr_depth == self.depth or actions == []):
+            if (curr_depth == self.depth or len(actions) == 0):
+                print("actions:")
+                print((len(actions) == 0))
                 return self.evaluationFunction(state)
             if (agentIndex == num_ghosts):
                 # if all ghosts have taken a step for this turn (layer), 
@@ -198,7 +188,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
                 best_min_value = 10000000
                 for action in actions:
                     next_state = gameState.generateSuccessor(agentIndex, action)
-                    next_value = max_value(next_state, curr_depth)
+                    next_value = max_value(next_state, curr_depth+1)
                     if next_value < best_min_value:
                         best_min_value = next_value
                 return best_min_value
@@ -217,10 +207,15 @@ class MinimaxAgent(MultiAgentSearchAgent):
         actions = gameState.getLegalActions(0)
         for action in actions:
             next_state = gameState.generateSuccessor(0, action)
-            next_value = min_value(next_state,1,1)
+            next_value = min_value(next_state,0,1)
             dic[action] = next_value
-        return max(dic.iteritems(), key=operator.itemgetter(1))[0]
+        max_res = max(dic.values())
+        for key in dic:
+            if (dic[key] == max_res):
+                return key
+        return actions[0]
         #cite https://stackoverflow.com/questions/268272/getting-key-with-maximum-value-in-dictionary
+        #util.raiseNotDefined()
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -235,7 +230,52 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        num_ghosts = gameState.getNumAgents()-1
+        def max_value(state, curr_depth):
+            #only Pacman will take the max, so no need to pass in agentIndex here
+            #it will always be 0
+            actions = gameState.getLegalActions(0)
+            # if there are no more legal actions or if we have reached the
+            # designated depth, then this state is a leaf
+            if (curr_depth == self.depth or actions == []):
+                return self.evaluationFunction(state)
+            best_value = -10000000
+            for action in actions:
+                next_state = gameState.generateSuccessor(0, action)
+                next_value = exp_value(next_state, curr_depth+1, 1)
+                if next_value > best_value:
+                    best_value = next_value
+            return best_value
+        
+        def exp_value(state, curr_depth, agentIndex):
+            actions = gameState.getLegalActions(agentIndex)
+            count = len(actions)
+            #the total number of actions available
+            if (curr_depth == self.depth or actions == []):
+                return self.evaluationFunction(state)
+            value = 0
+            for action in actions:
+                next_state = gameState.generateSuccessor(agentIndex, action)
+                if (agentIndex == num_ghosts):
+                    #if all ghosts have taken a step for this turn (layer)
+                    # then Pacman shall move
+                    value += max_value(next_state, curr_depth) 
+                else:
+                    value += exp_value(next_state, curr_depth, agentIndex+1) 
+            avg = value / count
+            return avg
+        dic = {}
+        #(action: evalation score)
+        actions = gameState.getLegalActions(0)
+        for action in actions:
+            next_state = gameState.generateSuccessor(0, action)
+            next_value = exp_value(next_state,1,1)
+            dic[action] = next_value
+        max_res = max(dic.values())
+        for key in dic:
+            if (dic[key] == max_res):
+                return key
+        return actions[0]
 
 def betterEvaluationFunction(currentGameState):
     """
