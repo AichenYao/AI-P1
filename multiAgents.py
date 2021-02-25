@@ -173,7 +173,54 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        num_ghosts = gameState.getNumAgents()-1
+        def max_value(state, curr_depth):
+            actions = gameState.getLegalActions(0)
+            # if there are no more legal actions or if we have reached the
+            # designated depth, then this state is a leaf
+            if (curr_depth == self.depth or actions == []):
+                return self.evaluationFunction(state)
+            best_value = -10000000
+            for action in actions:
+                next_state = gameState.generateSuccessor(0, action)
+                next_value = min_value(next_state, curr_depth+1, 1)
+                if next_value > best_value:
+                    best_value = next_value
+            return best_value
+        
+        def min_value(state, curr_depth, agentIndex):
+            actions = gameState.getLegalActions(agentIndex)
+            if (curr_depth == self.depth or actions == []):
+                return self.evaluationFunction(state)
+            if (agentIndex == num_ghosts):
+                # if all ghosts have taken a step for this turn (layer), 
+                # then Pacman shall move
+                best_min_value = 10000000
+                for action in actions:
+                    next_state = gameState.generateSuccessor(agentIndex, action)
+                    next_value = max_value(next_state, curr_depth)
+                    if next_value < best_min_value:
+                        best_min_value = next_value
+                return best_min_value
+            else:
+                best_min_value = 10000000
+                for action in actions:
+                    # we want to next ghost to move on this current depth
+                    next_state = gameState.generateSuccessor(agentIndex, action)
+                    next_value = min_value(next_state, agentIndex+1, curr_depth)
+                    if next_value < best_min_value:
+                        best_min_value = next_value
+                return best_min_value
+            
+        dic = {}
+        #(action: evalation score)
+        actions = gameState.getLegalActions(0)
+        for action in actions:
+            next_state = gameState.generateSuccessor(0, action)
+            next_value = min_value(next_state,1,1)
+            dic[action] = next_value
+        return max(dic.iteritems(), key=operator.itemgetter(1))[0]
+        #cite https://stackoverflow.com/questions/268272/getting-key-with-maximum-value-in-dictionary
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
