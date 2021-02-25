@@ -82,53 +82,36 @@ class ReflexAgent(Agent):
         """
         # Useful information you can extract from a GameState (pacman.py)
         # If we find a food close to us, then base up
-        # If next state is close to a wall, then base down
         # If closer to ghost, then base down
         # If newScaredTimes is bigger, then base up
+        
         successorGameState = currentGameState.generatePacmanSuccessor(action)
-        curPos = currentGameState.getPacmanPosition()
         newPos = successorGameState.getPacmanPosition()
         newX, newY = newPos
-        curFood = currentGameState.getFood()
+        oldFood = currentGameState.getFood()
         newFood = successorGameState.getFood()
-        food_total = curFood.count(True)
-
         newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
         newGhosts = [ghostState.getPosition() for ghostState in newGhostStates]
-        
-        walls = currentGameState.getWalls()
-
+        newFoodCount = newFood.count(True)
+        oldFoodCount = oldFood.count(True)
         base = 0
-        rows, cols = len(newFood.data), len(newFood.data[0])
-        newFoodRow, newFoodCol = -1,-1
-        food_distance = -1
-        for row in range(rows):
-            for col in range(cols):
-                if (curFood[row][col] != newFood[row][col]):
-                    newFoodRow, newFoodCol = row,col
-                    food_distance = mazeDistance(curPos, (newFoodRow, newFoodCol), successorGameState)
-                    break
-        if (food_distance != -1):
-            base += (8888 / (food_distance * food_total))
-        if (food_distance == -1):
-            base -= 1200
-        if (walls[newX][newY]): 
-            base -= 30
-        min_d = 0
-        for ghost in newGhosts:
-            m,n = ghost
-            distance = mazeDistance(newPos, (int(m),int(n)), successorGameState)
-            if (min_d == 0 or distance < min_d):
-                min_d = distance
-        if (min_d < 3):
-            base -= (min_d) * 4444
+        walls = successorGameState.getWalls()
+        if (walls[newX][newY] == True):
+            base -= 1
+
+        for ghost in newGhosts:  # the impact of ghost surges as distance get close
+            curr_d = manhattanDistance(ghost, newPos)
+            base -= math.exp(-curr_d+2)
+
+        if (newFoodCount == oldFoodCount):  # if this action does not eat a food 
+            dis = -1
+            for food in newFood.asList():
+                curr_d = manhattanDistance(food , newPos)
+                if (dis == -1 or curr_d < dis):
+                    dis = curr_d
         else:
-            base -= (min_d) * 80
-        
-        base += sum(newScaredTimes)
-        # "*** YOUR CODE HERE ***"
-        #print(base)
+            dis = 0
+        base -= dis
         return base
 
 def scoreEvaluationFunction(currentGameState):
