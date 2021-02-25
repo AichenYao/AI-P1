@@ -97,22 +97,28 @@ class ReflexAgent(Agent):
         base = 0
         walls = successorGameState.getWalls()
         if (walls[newX][newY] == True):
+            # don't hit a wall
             base -= 1
 
-        for ghost in newGhosts:  # the impact of ghost surges as distance get close
+        for ghost in newGhosts:  
+            # use the exponential function so that the closer we are to a food,
+            # the more we subtract from base
             curr_d = manhattanDistance(ghost, newPos)
             base -= math.exp(-curr_d+2)
 
-        if (newFoodCount == oldFoodCount):  # if this action does not eat a food 
+        if (newFoodCount == oldFoodCount):  
+            # if we did not eat a food, then we need to subtract the distance
+            # from the closest food 
             dis = -1
             for food in newFood.asList():
-                curr_d = manhattanDistance(food , newPos)
+                curr_d = manhattanDistance(food, newPos)
                 if (dis == -1 or curr_d < dis):
                     dis = curr_d
         else:
             dis = 0
         base -= dis
         return base
+
 
 def scoreEvaluationFunction(currentGameState):
     """
