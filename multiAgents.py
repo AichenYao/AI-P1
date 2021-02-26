@@ -217,7 +217,6 @@ class MinimaxAgent(MultiAgentSearchAgent):
         return actions[0]
         #cite https://stackoverflow.com/questions/268272/getting-key-with-maximum-value-in-dictionary
         #util.raiseNotDefined()
-
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
     Your expectimax agent (question 8)
@@ -226,7 +225,6 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
     def getAction(self, gameState):
         """
         Returns the expectimax action using self.depth and self.evaluationFunction
-
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
@@ -253,14 +251,14 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
             count = len(actions)
             for action in actions:
                 next_state = state.generateSuccessor(agentIndex, action)
-                if (agentIndex == state.getNumAgents()-1):
-                    cur_value = max_value(next_state, curr_depth)
-                else:
+                if (agentIndex != state.getNumAgents()-1):
                     cur_value = exp_value(next_state,curr_depth, agentIndex+1)
+                else:
+                    cur_value = max_value(next_state, curr_depth)
                 value_total += cur_value
-            if (count == 0):
-                return 0
-            return float(value_total)/float(count)
+            if (count != 0):
+                return float(value_total)/float(count)
+            return 0
         
         actions = gameState.getLegalActions(0)
         best_score = -math.inf
@@ -279,7 +277,6 @@ def betterEvaluationFunction(currentGameState):
     """
     Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
     evaluation function (question 9).
-
     DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
@@ -294,13 +291,17 @@ def betterEvaluationFunction(currentGameState):
     oldFoodCount = oldFood.count(True)
     newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
     base = 0
-    walls = successorGameState.getWalls()
+    base -= oldFoodCount
+    base += sum(newScaredTimes)
+    base += currentGameState.getScore()
+    
+    walls = currentGameState.getWalls()
     if (walls[newX][newY] == True):
         base -= 1
 
     for ghost in newGhosts: 
         curr_d = manhattanDistance(ghost, newPos)
-        base -= math.exp(-curr_d+2)
+        base -= 2**(-curr_d+2)
  
     dis = 0
     for food in oldFood.asList():
@@ -308,12 +309,9 @@ def betterEvaluationFunction(currentGameState):
         if (dis == 0 or curr_d < dis):
             dis = curr_d
     base -= dis
-    base -= oldFoodCount
-    base += sum(newScaredTimes)
-    base += currentGameState.getScore()
+
     return base
 
 
 # Abbreviation
 better = betterEvaluationFunction
-
