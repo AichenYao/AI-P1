@@ -29,6 +29,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+import math
 
 from game import Agent
 
