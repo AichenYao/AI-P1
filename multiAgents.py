@@ -230,52 +230,49 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         legal moves.
         """
         "*** YOUR CODE HERE ***"
-        num_ghosts = gameState.getNumAgents()-1
+        # print("total depth:")
+        # print(self.depth)
+        # print("total ghosts:")
+        # print(num_ghosts)
         def max_value(state, curr_depth):
-            #only Pacman will take the max, so no need to pass in agentIndex here
-            #it will always be 0
-            actions = gameState.getLegalActions(0)
-            # if there are no more legal actions or if we have reached the
-            # designated depth, then this state is a leaf
-            if (curr_depth == self.depth or actions == []):
+            actions = state.getLegalActions(0)
+            if (curr_depth == self.depth-1 or len(actions) == 0):
                 return self.evaluationFunction(state)
-            best_value = -10000000
+            best_value = -math.inf
             for action in actions:
-                next_state = gameState.generateSuccessor(0, action)
-                next_value = exp_value(next_state, curr_depth+1, 1)
-                if next_value > best_value:
-                    best_value = next_value
+                next_state = state.generateSuccessor(0,action)
+                best_value = max(best_value,exp_value(next_state,curr_depth+1,1))
             return best_value
-        
+
         def exp_value(state, curr_depth, agentIndex):
-            actions = gameState.getLegalActions(agentIndex)
-            count = len(actions)
-            #the total number of actions available
-            if (curr_depth == self.depth or actions == []):
+            actions = state.getLegalActions(agentIndex)
+            if (len(actions) == 0):
                 return self.evaluationFunction(state)
-            value = 0
+            value_total = 0
+            count = len(actions)
             for action in actions:
-                next_state = gameState.generateSuccessor(agentIndex, action)
-                if (agentIndex == num_ghosts):
-                    #if all ghosts have taken a step for this turn (layer)
-                    # then Pacman shall move
-                    value += max_value(next_state, curr_depth) 
+                next_state = state.generateSuccessor(agentIndex, action)
+                if (agentIndex == state.getNumAgents()-1):
+                    cur_value = max_value(next_state, curr_depth)
                 else:
-                    value += exp_value(next_state, curr_depth, agentIndex+1) 
-            avg = value / count
-            return avg
-        dic = {}
-        #(action: evalation score)
+                    cur_value = exp_value(next_state,curr_depth, agentIndex+1)
+                value_total += cur_value
+            if (count == 0):
+                return 0
+            return float(value_total)/float(count)
+        
         actions = gameState.getLegalActions(0)
+        best_score = -math.inf
+        best_action = None
         for action in actions:
-            next_state = gameState.generateSuccessor(0, action)
-            next_value = exp_value(next_state,1,1)
-            dic[action] = next_value
-        max_res = max(dic.values())
-        for key in dic:
-            if (dic[key] == max_res):
-                return key
-        return actions[0]
+            next_state = gameState.generateSuccessor(0,action)
+            cur_score = exp_value(next_state,0,1)
+            if (cur_score > best_score):
+                best_score = cur_score
+                best_action = action
+        return best_action
+        #util.raiseNotDefined()
+
 
 def betterEvaluationFunction(currentGameState):
     """
